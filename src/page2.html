@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Two — GitHub Pages Auth Demo</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🛠️</text></svg>" />
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="header-brand">
+      <svg height="24" viewBox="0 0 16 16" width="24" aria-hidden="true" fill="#e6edf3">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
+          2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59
+          .82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27
+          2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92
+          .08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73
+          .54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      GitHub Pages Demo
+    </a>
+
+    <nav aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="page1.html">Page 1</a>
+      <a href="page2.html" aria-current="page">Page 2</a>
+    </nav>
+
+    <div id="user-area"></div>
+  </header>
+
+  <main id="loading-main" aria-live="polite">
+    <div class="loading-screen">
+      <div class="spinner" role="status" aria-label="Authenticating…"></div>
+      <p>Verifying your session…</p>
+    </div>
+  </main>
+
+  <main id="page-main" hidden>
+    <a href="index.html" class="back-link">← Back to Home</a>
+
+    <div class="page-header">
+      <h1>🛠️ Page Two</h1>
+      <p>Your GitHub profile at a glance — data fetched live from the GitHub API.</p>
+    </div>
+
+    <div class="content-block" id="profile-card">
+      <!-- Populated by JS after auth -->
+    </div>
+
+    <div class="content-block">
+      <h2>How the auth works</h2>
+      <p>
+        This demo uses the <strong>OAuth 2.0 Authorization Code</strong> flow.
+        Your browser redirects to GitHub's consent screen, GitHub redirects back
+        with a short-lived <em>code</em>, a Cloudflare Worker securely exchanges
+        it for an access token (keeping the OAuth client secret off the client),
+        and the token is stored in <code>sessionStorage</code> for the tab's
+        lifetime.
+      </p>
+      <p>
+        The token is validated against <code>api.github.com/user</code> on every
+        page load — if it has expired or been revoked, you are immediately sent
+        back to the login flow.
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Deployed via GitHub Actions · Protected by GitHub OAuth</p>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async () => {
+      const user = await Auth.requireAuth();
+      if (!user) return;
+
+      document.getElementById("loading-main").hidden = true;
+      document.getElementById("page-main").hidden = false;
+
+      // Header chip
+      document.getElementById("user-area").innerHTML = `
+        <div class="user-chip">
+          <img src="${user.avatar_url}&s=56" alt="${user.login}'s avatar" width="28" height="28" />
+          <span>${user.login}</span>
+          <button class="btn btn-ghost" onclick="Auth.logout()" style="padding:0.3rem 0.75rem;font-size:0.8rem;">
+            Sign out
+          </button>
+        </div>`;
+
+      // Profile card
+      document.getElementById("profile-card").innerHTML = `
+        <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;">
+          <img src="${user.avatar_url}&s=96" alt="${user.login}'s avatar"
+               width="72" height="72"
+               style="border-radius:50%;border:2px solid var(--color-border);" />
+          <div>
+            <h2 style="margin-bottom:0.25rem">${user.name || user.login}</h2>
+            <p style="color:var(--color-muted);font-size:0.875rem;">@${user.login}</p>
+            ${user.bio ? `<p style="margin-top:0.5rem;font-size:0.9rem">${user.bio}</p>` : ""}
+          </div>
+        </div>
+        <div style="margin-top:1.25rem;display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.875rem;color:var(--color-muted);">
+          <span>📦 <strong style="color:var(--color-text)">${user.public_repos}</strong> public repos</span>
+          <span>👥 <strong style="color:var(--color-text)">${user.followers}</strong> followers</span>
+          <span>➡️ <strong style="color:var(--color-text)">${user.following}</strong> following</span>
+          ${user.location ? `<span>📍 ${user.location}</span>` : ""}
+        </div>
+        <div style="margin-top:1rem;">
+          <a href="https://github.com/${user.login}" target="_blank" rel="noopener noreferrer"
+             class="btn btn-ghost" style="font-size:0.8rem;">
+            View on GitHub ↗
+          </a>
+        </div>`;
+    })();
+  </script>
+</body>
+</html>

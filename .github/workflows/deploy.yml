@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+# Trigger on every push to main, and allow manual runs from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Grant the GITHUB_TOKEN the minimum permissions required to deploy Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one deployment at a time; don't cancel in-progress runs so a
+# partially deployed site is never left in a broken state.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. (Optional) Inject runtime config from repo secrets ────────────────
+      #
+      #   If you prefer not to commit src/js/config.js with real values, store
+      #   them as GitHub Actions secrets and uncomment the block below.
+      #   The `sed` commands replace the placeholder strings in config.js
+      #   before the artifact is uploaded.
+      #
+      # - name: Inject OAuth config
+      #   env:
+      #     CLIENT_ID: ${{ secrets.GITHUB_OAUTH_CLIENT_ID }}
+      #     PROXY_URL: ${{ secrets.OAUTH_PROXY_URL }}
+      #   run: |
+      #     sed -i "s|YOUR_GITHUB_CLIENT_ID|${CLIENT_ID}|g"     src/js/config.js
+      #     sed -i "s|https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev|${PROXY_URL}|g" src/js/config.js
+
+      # ── 3. Configure GitHub Pages ─────────────────────────────────────────────
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      # ── 4. Upload the src/ directory as the Pages artifact ───────────────────
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./src
+
+      # ── 5. Deploy ─────────────────────────────────────────────────────────────
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

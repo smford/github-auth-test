@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hello World — GitHub Pages Auth Demo</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Favicon: GitHub mark as inline SVG data URI -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🌐</text></svg>" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header>
+    <a href="." class="header-brand">
+      <!-- GitHub Octocat mark (simplified) -->
+      <svg height="24" viewBox="0 0 16 16" width="24" aria-hidden="true" fill="#e6edf3">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
+          2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59
+          .82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27
+          2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92
+          .08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73
+          .54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      GitHub Pages Demo
+    </a>
+
+    <nav id="main-nav" aria-label="Main navigation">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="page1.html">Page 1</a>
+      <a href="page2.html">Page 2</a>
+    </nav>
+
+    <div id="user-area"><!-- populated by JS --></div>
+  </header>
+
+  <!-- ── Loading state (shown until auth resolves) ──────── -->
+  <main id="loading-main" aria-live="polite">
+    <div class="loading-screen">
+      <div class="spinner" role="status" aria-label="Authenticating…"></div>
+      <p>Verifying your session…</p>
+    </div>
+  </main>
+
+  <!-- ── Real content (hidden until authenticated) ─────── -->
+  <main id="page-main" hidden>
+    <section class="hero">
+      <h1>👋 Hello, World!</h1>
+      <p>
+        You are authenticated via GitHub OAuth. Explore the demo pages below.
+      </p>
+    </section>
+
+    <div class="card-grid">
+      <a href="page1.html" class="card">
+        <span class="card-emoji">🚀</span>
+        <h2>Page One</h2>
+        <p>A simple demo page showing some static content.</p>
+      </a>
+
+      <a href="page2.html" class="card">
+        <span class="card-emoji">🛠️</span>
+        <h2>Page Two</h2>
+        <p>Another demo page — your GitHub profile at a glance.</p>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    <p>Deployed via GitHub Actions · Protected by GitHub OAuth</p>
+  </footer>
+
+  <!-- ── Scripts ────────────────────────────────────────── -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async () => {
+      const user = await Auth.requireAuth();
+      if (!user) return; // redirecting to login
+
+      // Swap loading → content
+      document.getElementById("loading-main").hidden = true;
+      document.getElementById("page-main").hidden = false;
+
+      // Render user chip in header
+      document.getElementById("user-area").innerHTML = `
+        <div class="user-chip">
+          <img src="${user.avatar_url}&s=56" alt="${user.login}'s avatar" width="28" height="28" />
+          <span>${user.login}</span>
+          <button class="btn btn-ghost" onclick="Auth.logout()" style="padding:0.3rem 0.75rem;font-size:0.8rem;">
+            Sign out
+          </button>
+        </div>`;
+    })();
+  </script>
+</body>
+</html>
