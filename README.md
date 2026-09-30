@@ -13,23 +13,28 @@ A minimal GitHub Pages site protected by **GitHub OAuth 2.0 Authentication**, de
 
 ## Architecture
 
-```
-Browser
-  │
-  │  visit page → no token?
-  ▼
-GitHub OAuth Consent  ──── redirect with ?code= ────►  callback.html
-                                                              │
-                                                    POST code to Worker
-                                                              │
-                                                    Cloudflare Worker
-                                                    (holds client_secret)
-                                                              │
-                                                    ◄── access_token ────
-                                                              │
-                                                    stored in sessionStorage
-                                                              │
-                                                    redirect to original page
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant S as GitHub Pages
+    participant G as GitHub OAuth
+    participant W as Cloudflare Worker
+    participant A as GitHub API
+
+    B->>S: Visit protected page
+    S->>S: Check sessionStorage for token
+    S->>G: No token — redirect to OAuth consent
+    G->>B: Show Authorize screen
+    B->>G: User clicks Authorize
+    G->>S: Redirect to callback.html?code=xxx
+    S->>W: Fetch Worker with code
+    W->>G: POST client_id + client_secret + code
+    G->>W: Return access_token
+    W->>S: Return access_token (CORS-safe)
+    S->>S: Store token in sessionStorage
+    S->>A: GET /user with token
+    A->>S: Return user profile
+    S->>B: Show protected page content
 ```
 
 | Component | Technology |
@@ -98,15 +103,15 @@ If you need to genuinely prevent access to files, the correct solution is to enf
 
 Since `stephenford.org` already sits behind Cloudflare, **Cloudflare Access** (free up to 50 users) is the recommended upgrade path. It intercepts every HTTP request and requires a valid GitHub login before passing the request to the GitHub Pages origin.
 
-```
-wget https://stephenford.org/github-auth-test/index.html
-  │
-  ▼
-Cloudflare Edge
-  │
-  ├── no valid Access session?  ──►  HTTP 302 → GitHub Login
-  │
-  └── valid session  ──────────────►  file served from GitHub Pages
+```mermaid
+flowchart LR
+    A["wget / curl / Browser"] --> B["Cloudflare Edge"]
+    B --> C{Valid Access\nsession?}
+    C -- No --> D["HTTP 302\nGitHub Login"]
+    D --> E["User authenticates\nwith GitHub"]
+    E --> B
+    C -- Yes --> F["Request forwarded\nto GitHub Pages origin"]
+    F --> G["File served\nto client"]
 ```
 
 See the [Cloudflare Access documentation](https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/self-hosted-apps/) for setup instructions.
