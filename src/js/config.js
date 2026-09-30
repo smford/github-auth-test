@@ -12,6 +12,6 @@
  */
 const CONFIG = Object.freeze({
   GITHUB_CLIENT_ID: "Ov23liWNRV7dsG2xuXLS",
-  OAUTH_PROXY_URL: "https://smford.workers.dev",
+  OAUTH_PROXY_URL: "https://github-oauth-proxy.smford.workers.dev",
   GITHUB_REPO_PATH: "/github-auth-test",
 });
